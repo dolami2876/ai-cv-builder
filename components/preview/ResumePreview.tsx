@@ -113,6 +113,103 @@ export default function ResumePreview() {
                 </div>
             </section>
 
+            {/* EXTENDED SECTIONS */}
+            {store.activities && store.activities.length > 0 && (
+                <section className="mb-6">
+                    <h3 className="mb-4 text-xs font-bold uppercase tracking-wider border-b pb-1" style={{ color: hexColor, borderColor: '#e5e7eb' }}>
+                        Activities
+                    </h3>
+                    <div className="space-y-4">
+                        {store.activities.map((act) => (
+                            <div key={act.id}>
+                                <div className="flex justify-between items-baseline mb-1">
+                                    <h4 className="font-bold text-gray-900">{act.role}</h4>
+                                    <span className="text-xs font-medium text-gray-500">{act.startDate} – {act.endDate}</span>
+                                </div>
+                                <div className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: hexColor }}>
+                                    {act.organization}
+                                </div>
+                                <p className="text-gray-700">{act.description}</p>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {store.certificates && store.certificates.length > 0 && (
+                <section className="mb-6">
+                    <h3 className="mb-4 text-xs font-bold uppercase tracking-wider border-b pb-1" style={{ color: hexColor, borderColor: '#e5e7eb' }}>
+                        Certificates
+                    </h3>
+                    <div className="grid gap-2">
+                        {store.certificates.map((cert) => (
+                            <div key={cert.id} className="flex justify-between">
+                                <div>
+                                    <span className="font-semibold text-gray-900">{cert.name}</span>
+                                    <span className="text-gray-600"> - {cert.issuer}</span>
+                                </div>
+                                <span className="text-xs text-gray-500">{cert.date}</span>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {store.awards && store.awards.length > 0 && (
+                <section className="mb-6">
+                    <h3 className="mb-4 text-xs font-bold uppercase tracking-wider border-b pb-1" style={{ color: hexColor, borderColor: '#e5e7eb' }}>
+                        Honors & Awards
+                    </h3>
+                    <div className="space-y-3">
+                        {store.awards.map((award) => (
+                            <div key={award.id}>
+                                <div className="flex justify-between">
+                                    <span className="font-semibold text-gray-900">{award.title}</span>
+                                    <span className="text-xs text-gray-500">{award.date}</span>
+                                </div>
+                                <div className="text-xs text-gray-600 mb-1">{award.issuer}</div>
+                                {award.description && <p className="text-sm text-gray-700">{award.description}</p>}
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {store.interests && store.interests.length > 0 && (
+                <section className="mb-6">
+                    <h3 className="mb-3 text-xs font-bold uppercase tracking-wider border-b pb-1" style={{ color: hexColor, borderColor: '#e5e7eb' }}>
+                        Interests
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                        {store.interests.map((interest, i) => (
+                            <span key={i} className="text-gray-700">
+                                {interest}{i < store.interests.length - 1 ? " • " : ""}
+                            </span>
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {store.references && store.references.length > 0 && (
+                <section className="mb-6">
+                    <h3 className="mb-4 text-xs font-bold uppercase tracking-wider border-b pb-1" style={{ color: hexColor, borderColor: '#e5e7eb' }}>
+                        References
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {store.references.map((ref) => (
+                            <div key={ref.id} className="text-sm">
+                                <div className="font-bold text-gray-900">{ref.name}</div>
+                                <div className="text-gray-700">{ref.role} - {ref.company}</div>
+                                <div className="text-xs text-gray-500 mt-1">
+                                    <div>{ref.phone}</div>
+                                    <div>{ref.email}</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
+
             <section>
                 <h3 className="mb-3 text-xs font-bold uppercase tracking-wider border-b pb-1" style={{ color: hexColor, borderColor: '#e5e7eb' }}>
                     Skills

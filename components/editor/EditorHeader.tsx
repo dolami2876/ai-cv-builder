@@ -78,8 +78,12 @@ export default function EditorHeader({ resumeId }: { resumeId: string }) {
 
                     <button
                         onClick={handleDocxDownload}
-                        className="group flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all"
-                        title="Download as Word (Premium)"
+                        className={`group flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all focus:outline-none focus:ring-2 ${isPremium
+                                ? "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 focus:ring-blue-200"
+                                : "border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed"
+                            }`}
+                        title={isPremium ? "Download as Word" : "Upgrade to Premium to Download Word"}
+                        disabled={!isPremium}
                     >
                         {isPremium ? <FileText className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
                         <span className="hidden sm:inline">Word</span>

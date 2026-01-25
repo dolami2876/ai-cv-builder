@@ -2,6 +2,12 @@ import PersonalInfoForm from "@/components/editor/PersonalInfoForm";
 import ExperienceForm from "@/components/editor/ExperienceForm";
 import EducationForm from "@/components/editor/EducationForm";
 import SkillsForm from "@/components/editor/SkillsForm";
+import ActivitiesForm from "@/components/editor/ActivitiesForm";
+import CertificatesForm from "@/components/editor/CertificatesForm";
+import AwardsForm from "@/components/editor/AwardsForm";
+import ReferencesForm from "@/components/editor/ReferencesForm";
+import InterestsForm from "@/components/editor/InterestsForm";
+
 import ResumePreview from "@/components/preview/ResumePreview";
 import EditorHeader from "@/components/editor/EditorHeader";
 
@@ -16,11 +22,21 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
                 <div className="mx-auto max-w-2xl space-y-8 p-6 pb-20">
                     <PersonalInfoForm />
                     <hr className="border-gray-100" />
-                    <EducationForm />
-                    <hr className="border-gray-100" />
                     <ExperienceForm />
                     <hr className="border-gray-100" />
+                    <EducationForm />
+                    <hr className="border-gray-100" />
                     <SkillsForm />
+                    <hr className="border-gray-100" />
+                    <ActivitiesForm />
+                    <hr className="border-gray-100" />
+                    <CertificatesForm />
+                    <hr className="border-gray-100" />
+                    <AwardsForm />
+                    <hr className="border-gray-100" />
+                    <ReferencesForm />
+                    <hr className="border-gray-100" />
+                    <InterestsForm />
                 </div>
             </div>
 

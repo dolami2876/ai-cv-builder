@@ -9,7 +9,7 @@ export async function POST(req: Request) {
         const { resumeData } = await req.json();
 
         const result = await generateObject({
-            model: google('gemini-1.5-flash'),
+            model: google('gemini-pro'),
             schema: z.object({
                 score: z.number().describe('Overall score from 0 to 100'),
                 summary: z.string().describe('Brief summary of the evaluation'),

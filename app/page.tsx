@@ -1,3 +1,4 @@
+import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, Sparkles } from "lucide-react";
 
@@ -10,12 +11,26 @@ export default function Home() {
           <Sparkles className="h-5 w-5 text-purple-600" />
           <span>CV Boost</span>
         </div>
-        <Link
-          href="/onboarding"
-          className="rounded-full bg-black px-5 py-2 text-sm font-medium text-white transition hover:bg-gray-800"
-        >
-          Get Started
-        </Link>
+
+        <div className="flex items-center gap-4">
+          <SignedOut>
+            <SignInButton mode="modal">
+              <button className="text-sm font-medium text-gray-600 hover:text-gray-900">
+                Sign In
+              </button>
+            </SignInButton>
+          </SignedOut>
+          <SignedIn>
+            <UserButton />
+          </SignedIn>
+
+          <Link
+            href="/onboarding"
+            className="rounded-full bg-black px-5 py-2 text-sm font-medium text-white transition hover:bg-gray-800"
+          >
+            Get Started
+          </Link>
+        </div>
       </nav>
 
       {/* Hero Section */}

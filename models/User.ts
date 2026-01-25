@@ -3,18 +3,32 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 export interface IUser extends Document {
     clerkId: string;
     email: string;
-    isPremium: boolean;
     credits: number;
+    isPremium: boolean;
+    paymentHistory: {
+        transactionId: string;
+        amount: number;
+        date: Date;
+        status: string;
+    }[];
     createdAt: Date;
     updatedAt: Date;
 }
 
 const UserSchema = new Schema<IUser>(
     {
-        clerkId: { type: String, required: true, unique: true },
+        clerkId: { type: String, required: true, unique: true, index: true },
         email: { type: String, required: true },
-        isPremium: { type: Boolean, default: false },
         credits: { type: Number, default: 5 }, // Free 5 credits
+        isPremium: { type: Boolean, default: false },
+        paymentHistory: [
+            {
+                transactionId: String,
+                amount: Number,
+                date: { type: Date, default: Date.now },
+                status: String,
+            },
+        ],
     },
     { timestamps: true }
 );

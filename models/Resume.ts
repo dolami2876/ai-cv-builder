@@ -29,6 +29,35 @@ export interface IResume extends Document {
     }[];
     skills: string[]; // Mảng string cho kỹ năng
 
+    // Expanded Sections
+    activities: {
+        organization: string;
+        role: string;
+        startDate: string;
+        endDate: string;
+        description: string;
+    }[];
+    certificates: {
+        name: string;
+        issuer: string;
+        date: string;
+    }[];
+    awards: {
+        title: string;
+        issuer: string;
+        date: string;
+        description: string;
+    }[];
+    references: {
+        name: string;
+        role: string;
+        company: string;
+        phone: string;
+        email: string;
+    }[];
+    languages: string[];
+    interests: string[];
+
     // Onboarding / Persona Data (Dùng cho AI Context)
     targetDomain?: string;     // Ngành mong muốn (e.g. "Software Engineer")
     experienceLevel?: string;  // Trình độ (e.g. "Senior", "Fresher")
@@ -82,6 +111,43 @@ const ResumeSchema = new Schema<IResume>(
         targetDomain: { type: String, default: "" },
         experienceLevel: { type: String, default: "" },
         jobGoal: { type: String, default: "" },
+
+        // Expanded Sections
+        activities: [
+            {
+                organization: { type: String, default: "" },
+                role: { type: String, default: "" },
+                startDate: { type: String, default: "" },
+                endDate: { type: String, default: "" },
+                description: { type: String, default: "" },
+            }
+        ],
+        certificates: [
+            {
+                name: { type: String, default: "" },
+                issuer: { type: String, default: "" },
+                date: { type: String, default: "" },
+            }
+        ],
+        awards: [
+            {
+                title: { type: String, default: "" },
+                issuer: { type: String, default: "" },
+                date: { type: String, default: "" },
+                description: { type: String, default: "" },
+            }
+        ],
+        references: [
+            {
+                name: { type: String, default: "" },
+                role: { type: String, default: "" },
+                company: { type: String, default: "" },
+                phone: { type: String, default: "" },
+                email: { type: String, default: "" },
+            }
+        ],
+        languages: { type: [String], default: [] },
+        interests: { type: [String], default: [] },
 
         // Visual Preferences
         style: {

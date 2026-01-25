@@ -1,41 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import connectDB from "@/lib/db";
 import Resume from "@/models/Resume";
+import connectToDB from "@/lib/db";
 
-export async function POST(
-    req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { userId } = await auth();
         if (!userId) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+            return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        await connectDB();
         const { id } = await params;
+        await connectToDB();
 
-        // Find original resume
         const originalResume = await Resume.findOne({ _id: id, userId });
+
         if (!originalResume) {
-            return NextResponse.json({ error: "Resume not found" }, { status: 404 });
+            return new NextResponse("Resume not found", { status: 404 });
         }
 
-        // Clone fields
-        const { _id, createdAt, updatedAt, __v, ...resumeData } = originalResume.toObject();
+        // Clone the resume object
+        const newResumeData = originalResume.toObject() as any;
+        delete newResumeData._id; // Remove original ID
+        delete newResumeData.createdAt;
+        delete newResumeData.updatedAt;
 
-        // Create new resume with modified title
-        const newResume = await Resume.create({
-            ...resumeData,
-            title: `Copy of ${originalResume.title}`,
-            userId, // Explicitly set again
-        });
+        newResumeData.title = `${newResumeData.title} (Copy)`;
+        newResumeData.isPublished = false;
 
-        return NextResponse.json(newResume, { status: 201 });
+        const newResume = await Resume.create(newResumeData);
 
+        return NextResponse.json(newResume);
     } catch (error) {
-        console.error("Error duplicating resume:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        console.error("Duplicate Error:", error);
+        return new NextResponse("Internal Server Error", { status: 500 });
     }
 }

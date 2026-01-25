@@ -7,7 +7,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "AI Resume Builder",
+  title: "CV Boost - AI Resume Builder",
   description: "Build your professional resume with AI",
 };
 
@@ -18,7 +18,7 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en">
+      <html lang="en" suppressHydrationWarning>
         <body className={`${inter.className} bg-gray-50 text-gray-900 antialiased`}>{children}</body>
       </html>
     </ClerkProvider>
