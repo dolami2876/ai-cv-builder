@@ -1,65 +1,89 @@
-import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight, CheckCircle2, Sparkles } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="flex min-h-screen flex-col bg-white">
+      {/* Navbar (Simple) */}
+      <nav className="flex items-center justify-between border-b px-6 py-4 md:px-12">
+        <div className="flex items-center gap-2 font-bold text-xl">
+          <Sparkles className="h-5 w-5 text-purple-600" />
+          <span>CV Boost</span>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <Link
+          href="/onboarding"
+          className="rounded-full bg-black px-5 py-2 text-sm font-medium text-white transition hover:bg-gray-800"
+        >
+          Get Started
+        </Link>
+      </nav>
+
+      {/* Hero Section */}
+      <main className="flex flex-1 flex-col items-center justify-center px-6 py-20 text-center md:px-12 lg:py-32">
+        <div className="mx-auto max-w-3xl space-y-6">
+          <div className="mx-auto w-fit rounded-full bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700 ring-1 ring-purple-100">
+            CV Boost - Professional Resume Builder
+          </div>
+
+          <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
+            Build your professional resume with <span className="text-purple-600">CV Boost AI</span>
+          </h1>
+
+          <p className="mx-auto max-w-2xl text-lg text-gray-500 md:text-xl">
+            Create a standout CV in minutes. Our AI helps you write professional descriptions, fix grammar, and optimize for your dream job.
+          </p>
+
+          <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+            <Link
+              href="/onboarding"
+              className="flex items-center gap-2 rounded-full bg-purple-600 px-8 py-3 text-lg font-semibold text-white shadow-lg transition hover:bg-purple-700 hover:shadow-xl"
+            >
+              Start Building Free <ArrowRight className="h-5 w-5" />
+            </Link>
+            <Link
+              href="#features"
+              className="flex items-center gap-2 rounded-full border border-gray-300 bg-white px-8 py-3 text-lg font-medium text-gray-700 transition hover:bg-gray-50"
+            >
+              View Features
+            </Link>
+          </div>
+        </div>
+
+        {/* Features Preview */}
+        <div id="features" className="mt-24 grid w-full max-w-5xl gap-8 sm:grid-cols-3 text-left">
+          <FeatureCard
+            title="AI Writing Assistant"
+            description="Stuck on what to write? Let CV Boost generate professional summaries and work experience points instantly."
+            icon={<Sparkles className="h-6 w-6 text-purple-600" />}
+          />
+          <FeatureCard
+            title="Real-time Preview"
+            description="See your changes instantly with our split-screen editor. No more guessing how it looks."
+            icon={<CheckCircle2 className="h-6 w-6 text-green-600" />}
+          />
+          <FeatureCard
+            title="ATS Friendly"
+            description="Clean, professional templates designed to pass Applicant Tracking Systems and get you hired."
+            icon={<CheckCircle2 className="h-6 w-6 text-blue-600" />}
+          />
         </div>
       </main>
+
+      <footer className="border-t py-8 text-center text-sm text-gray-500">
+        © {new Date().getFullYear()} CV Boost. All rights reserved.
+      </footer>
     </div>
   );
+}
+
+function FeatureCard({ title, description, icon }: { title: string; description: string; icon: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border bg-gray-50 p-6 transition hover:shadow-md">
+      <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-white shadow-sm border">
+        {icon}
+      </div>
+      <h3 className="mb-2 text-lg font-bold text-gray-900">{title}</h3>
+      <p className="text-gray-600">{description}</p>
+    </div>
+  )
 }

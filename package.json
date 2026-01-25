@@ -9,12 +9,25 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ai-sdk/google": "^3.0.13",
+    "@ai-sdk/react": "^3.0.51",
+    "@clerk/nextjs": "^6.36.10",
+    "ai": "^6.0.49",
+    "clsx": "^2.1.1",
+    "docx": "^9.5.1",
+    "file-saver": "^2.0.5",
+    "lucide-react": "^0.563.0",
+    "mongoose": "^9.1.5",
     "next": "16.1.4",
+    "openai": "^6.16.0",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "tailwind-merge": "^3.4.0",
+    "zustand": "^5.0.10"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/file-saver": "^2.0.7",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
