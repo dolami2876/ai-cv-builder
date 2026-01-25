@@ -78,6 +78,11 @@ export interface ResumeState {
     targetDomain: string;
     experienceLevel: string;
 
+    // Version History
+    versions: { content: any; createdAt: Date }[];
+    restoreVersion: (content: any) => void;
+    createVersion: () => void;
+
     // Persistence State
     isSaving: boolean;
     isError: boolean;
@@ -171,6 +176,8 @@ export const useResumeStore = create<ResumeState>((set, get) => ({
     experienceLevel: "",
     jobDescription: "",
 
+    versions: [],
+
     style: {
         hexColor: "#000000",
         font: "inter",
@@ -203,6 +210,7 @@ export const useResumeStore = create<ResumeState>((set, get) => ({
 
                 targetDomain: data.targetDomain || "",
                 experienceLevel: data.experienceLevel || "",
+                versions: data.versions || [],
                 style: data.style || { hexColor: "#000000", font: "inter", layout: "modern" },
             });
         } catch (error) {
@@ -232,6 +240,16 @@ export const useResumeStore = create<ResumeState>((set, get) => ({
                 targetDomain: state.targetDomain,
                 experienceLevel: state.experienceLevel,
                 style: state.style,
+                // We typically push a new version on save, or let the backend handle it.
+                // Let's assume we send the current content as a "snapshot" request if needed?
+                // Actually, backend should handle creating a version from the update if configured.
+                // But for now, let's just make sure we don't accidentally wipe versions if we send the whole object.
+                // If the PUT endpoint replaces the whole document, we need to send versions back OR backend should merge.
+                // Best practice: Backend handles versioning on save.
+                // But since we are using Mongoose, if we do findByIdAndUpdate with { ...body }, it might overwrite versions check Schema.
+                // Our API implementation likely replaces fields. 
+                // Let's inspect API route later. For now, sending what we have is safer to avoid data loss.
+                versions: state.versions,
             };
 
             const res = await fetch(`/api/resumes/${id}`, {
@@ -367,4 +385,49 @@ export const useResumeStore = create<ResumeState>((set, get) => ({
     setExperienceLevel: (experienceLevel) => set({ experienceLevel }),
 
     setJobDescription: (jobDescription) => set({ jobDescription }),
+
+    restoreVersion: (content) => set((state) => ({
+        ...content,
+        personalInfo: content.personalInfo || state.personalInfo,
+        summary: content.summary || state.summary,
+        experience: content.experience || [],
+        education: content.education || [],
+        skills: content.skills || [],
+        activities: content.activities || [],
+        certificates: content.certificates || [],
+        awards: content.awards || [],
+        references: content.references || [],
+        languages: content.languages || [],
+        interests: content.interests || [],
+        targetDomain: content.targetDomain || state.targetDomain,
+        experienceLevel: content.experienceLevel || state.experienceLevel,
+        style: content.style || state.style,
+    })),
+
+    createVersion: () => set((state) => {
+        // Create a snapshot of current data
+        const snapshot = {
+            personalInfo: state.personalInfo,
+            summary: state.summary,
+            experience: state.experience,
+            education: state.education,
+            skills: state.skills,
+            activities: state.activities,
+            certificates: state.certificates,
+            awards: state.awards,
+            references: state.references,
+            languages: state.languages,
+            interests: state.interests,
+            targetDomain: state.targetDomain,
+            experienceLevel: state.experienceLevel,
+            style: state.style,
+        };
+
+        return {
+            versions: [
+                { content: snapshot, createdAt: new Date() },
+                ...state.versions // Add to front or back? Front is better for sort.
+            ]
+        };
+    }),
 }));

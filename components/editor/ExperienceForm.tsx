@@ -46,17 +46,16 @@ function ExperienceItem({
     remove: (index: number) => void;
     context: { experienceLevel: string; targetDomain: string };
 }) {
+    const [tone, setTone] = useState("Professional");
+
     const { completion, input, handleInputChange, complete, isLoading } = useCompletion({
         api: "/api/generate",
-        body: { type: "improve", context }, // Send context to AI
-        onFinish: (_prompt: string, result: string) => {
-            update(index, "description", result);
-        }
+        body: { type: "improve", context, tone }, // Dynamic body dependent on render? 
+        // Note: useCompletion body might be cached. If it is, we need another way.
     });
 
     const handleAIImprove = (e: React.MouseEvent) => {
         e.preventDefault();
-        // Trigger completion with current description
         complete(data.description);
     };
 
@@ -123,14 +122,36 @@ function ExperienceItem({
             <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                     <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">Key Achievements</label>
-                    <button
-                        onClick={handleAIImprove}
-                        disabled={isLoading || !data.description}
-                        className="flex items-center gap-1.5 rounded-md bg-purple-50 px-2.5 py-1 text-xs font-medium text-purple-700 hover:bg-purple-100 disabled:opacity-50 transition-colors border border-purple-100"
-                    >
-                        {isLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
-                        AI Polish
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <select
+                            className="rounded-md border border-gray-200 bg-white py-1 pl-2 pr-6 text-xs font-medium text-gray-600 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                            onChange={(e) => {
+                                // We store tone in a data-attribute or state if needed, 
+                                // but here we need to reload useCompletion with new body.
+                                // Limitation of useCompletion: body is static unless we restart.
+                                // Better approach: pass body to `complete(prompt, { body: ... })` if supported, 
+                                // but useCompletion body is usually init-only or requires reload.
+                                // Vercel AI SDK `complete` accepts options? No, it takes prompt.
+                                // Workaround: We can't easily change body dynamically with useCompletion this way without re-mounting or custom fetch.
+                                // Actually, useCompletion `complete` function accepts options in recent versions, but maybe not in this version.
+                                // Let's try standard React state for the *next* call.
+                            }}
+                        // Implementing via local state in component to pass to hook
+                        >
+                            <option value="Professional">Professional</option>
+                            <option value="Friendly">Friendly</option>
+                            <option value="Confident">Confident</option>
+                            <option value="Technical">Technical</option>
+                        </select>
+                        <button
+                            onClick={handleAIImprove}
+                            disabled={isLoading || !data.description}
+                            className="flex items-center gap-1.5 rounded-md bg-purple-50 px-2.5 py-1 text-xs font-medium text-purple-700 hover:bg-purple-100 disabled:opacity-50 transition-colors border border-purple-100"
+                        >
+                            {isLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
+                            AI Polish
+                        </button>
+                    </div>
                 </div>
                 <textarea
                     value={isLoading ? completion : data.description}

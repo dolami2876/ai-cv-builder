@@ -6,6 +6,7 @@ export interface IResume extends Document {
     userId: string;       // ID người dùng (sau này dùng Clerk/NextAuth)
     title: string;        // Tên file CV
     isPublished: boolean; // Trạng thái public hay private
+    versions?: { content: any; createdAt: Date }[];
     personalInfo: {
         fullName: string;
         email: string;
@@ -78,6 +79,12 @@ const ResumeSchema = new Schema<IResume>(
         userId: { type: String, required: true },
         title: { type: String, required: true, default: "Untitled Resume" },
         isPublished: { type: Boolean, default: false },
+        versions: [
+            {
+                content: { type: Object },
+                createdAt: { type: Date, default: Date.now }
+            }
+        ],
 
         personalInfo: {
             fullName: { type: String, default: "" },

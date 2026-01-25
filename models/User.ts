@@ -4,6 +4,7 @@ export interface IUser extends Document {
     clerkId: string;
     email: string;
     credits: number;
+    lastFreeCreditReset: Date;
     isPremium: boolean;
     paymentHistory: {
         transactionId: string;
@@ -20,6 +21,7 @@ const UserSchema = new Schema<IUser>(
         clerkId: { type: String, required: true, unique: true, index: true },
         email: { type: String, required: true },
         credits: { type: Number, default: 5 }, // Free 5 credits
+        lastFreeCreditReset: { type: Date, default: Date.now },
         isPremium: { type: Boolean, default: false },
         paymentHistory: [
             {
