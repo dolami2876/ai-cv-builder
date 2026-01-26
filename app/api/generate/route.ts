@@ -11,7 +11,7 @@ export async function POST(req: Request) {
         const { prompt, type, context, tone } = await req.json();
 
         // Check for API Key
-        if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+        if (!process.env.GEMINI_API_KEY) {
             return new Response("Missing Google API Key", { status: 500 });
         }
 
