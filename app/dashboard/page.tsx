@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import PricingModal from "@/components/editor/PricingModal";
+
 interface ResumeSummary {
     _id: string;
     title: string;
@@ -17,6 +19,7 @@ export default function DashboardPage() {
     const router = useRouter();
     const [resumes, setResumes] = useState<ResumeSummary[]>([]);
     const [loading, setLoading] = useState(true);
+    const [showPricing, setShowPricing] = useState(false);
 
     useEffect(() => {
         if (isLoaded && !isSignedIn) {
@@ -91,12 +94,20 @@ export default function DashboardPage() {
                         <h1 className="text-3xl font-bold text-gray-900">My Resumes</h1>
                         <p className="text-gray-500">Manage your CVs and create new ones.</p>
                     </div>
-                    <Link
-                        href="/onboarding"
-                        className="flex items-center gap-2 rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-gray-800 focus:ring-4 focus:ring-gray-200"
-                    >
-                        <Plus className="h-4 w-4" /> Create New
-                    </Link>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setShowPricing(true)}
+                            className="flex items-center gap-2 rounded-lg border border-yellow-200 bg-yellow-50 px-5 py-2.5 text-sm font-medium text-yellow-700 hover:bg-yellow-100 transition-all"
+                        >
+                            <span className="">Upgrade PRO</span>
+                        </button>
+                        <Link
+                            href="/onboarding"
+                            className="flex items-center gap-2 rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-gray-800 focus:ring-4 focus:ring-gray-200"
+                        >
+                            <Plus className="h-4 w-4" /> Create New
+                        </Link>
+                    </div>
                 </div>
 
                 {resumes.length === 0 ? (
@@ -163,6 +174,7 @@ export default function DashboardPage() {
                     </div>
                 )}
             </div>
+            <PricingModal isOpen={showPricing} onClose={() => setShowPricing(false)} />
         </div>
     );
 }

@@ -1,8 +1,9 @@
 "use client";
 
 import { useResumeStore } from "@/lib/store";
-import { Save, Loader2, CheckCircle, AlertCircle, Briefcase } from "lucide-react";
+import { Save, Loader2, CheckCircle, AlertCircle, Briefcase, ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import AIEvaluator from "@/components/editor/AIEvaluator";
 import TemplateSelector from "@/components/editor/TemplateSelector";
 import AIWriterButton from "@/components/editor/AIWriterButton";
@@ -45,6 +46,9 @@ export default function EditorHeader({ resumeId }: { resumeId: string }) {
         <>
             <header className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white/80 px-6 py-4 backdrop-blur-sm">
                 <div className="flex flex-col">
+                    <Link href="/dashboard" className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-900 mb-1">
+                        <ArrowLeft className="h-3 w-3" /> Back
+                    </Link>
                     <h1 className="text-xl font-bold tracking-tight text-gray-900">
                         Resume Editor
                     </h1>
