@@ -203,7 +203,12 @@ export default function CVIterationPage() {
                                                             ]);
                                                         }
                                                     }}
-                                                    disabled={selectedVersions.includes(version.id) || (selectedVersions[0] && selectedVersions[1] && !selectedVersions.includes(version.id))}
+                                                    disabled={
+                                                        selectedVersions.includes(version.id) ||
+                                                        (!!selectedVersions[0] &&
+                                                            !!selectedVersions[1] &&
+                                                            !selectedVersions.includes(version.id))
+                                                    }
                                                 />
                                                 <div>
                                                     <p className="font-medium text-gray-900">
