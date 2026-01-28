@@ -15,7 +15,7 @@ interface Version {
 }
 
 export default function CVIterationPage() {
-    const { isSignedIn, userId } = useUser();
+    const { isSignedIn } = useUser();
     const router = useRouter();
     const [resumeId, setResumeId] = useState<string | null>(null);
     const [currentData, setCurrentData] = useState<any>(null);
@@ -25,10 +25,10 @@ export default function CVIterationPage() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (isSignedIn && userId) {
+        if (isSignedIn) {
             loadResumes();
         }
-    }, [isSignedIn, userId]);
+    }, [isSignedIn]);
 
     const loadResumes = async () => {
         try {
