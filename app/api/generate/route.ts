@@ -1,8 +1,33 @@
 import { google } from '@ai-sdk/google';
-import { streamText } from 'ai';
+import { streamText, generateObject } from 'ai';
+import { z } from 'zod';
 import { auth } from "@clerk/nextjs/server";
 import connectToDB from "@/lib/db";
 import User from "@/models/User";
+
+// Shared schema cho các response dạng CV đầy đủ
+const ResumeSchema = z.object({
+    personalInfo: z.object({
+        fullName: z.string().describe('Exact name from input'),
+        email: z.string().describe('Exact email from input'),
+        phone: z.string().optional().describe('Exact phone from input if provided'),
+    }),
+    summary: z.string().describe('Professional summary based on provided experience'),
+    experience: z.array(z.object({
+        company: z.string().describe('Company name extracted from experience text'),
+        role: z.string().describe('Job role extracted from experience text'),
+        startDate: z.string().describe('Start date extracted from experience text'),
+        endDate: z.string().describe('End date extracted from experience text or "Present"'),
+        description: z.string().describe('Formatted description from provided experience text'),
+    })).describe('Experience entries parsed from provided text'),
+    education: z.array(z.object({
+        school: z.string().describe('School name extracted from education text'),
+        degree: z.string().describe('Degree extracted from education text'),
+        startDate: z.string().describe('Start date extracted from education text'),
+        endDate: z.string().describe('End date extracted from education text'),
+    })).describe('Education entries parsed from provided text'),
+    skills: z.array(z.string()).describe('Skills array from provided skills text'),
+});
 
 export const maxDuration = 30;
 
@@ -11,7 +36,7 @@ export async function POST(req: Request) {
         const { prompt, type, context, tone } = await req.json();
 
         // Check for API Key
-        if (!process.env.GEMINI_API_KEY) {
+        if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
             return new Response("Missing Google API Key", { status: 500 });
         }
 
@@ -38,16 +63,18 @@ export async function POST(req: Request) {
             await user.save();
         }
 
-        // Check availability
+        // NOTE: Tạm thời không chặn theo credits để thuận tiện phát triển / demo.
+        // Nếu muốn bật lại giới hạn, khôi phục đoạn kiểm tra bên dưới.
+        /*
         if (user.credits <= 0 && !user.isPremium) {
             return new Response("Daily free credits exhausted. Upgrade to Premium for unlimited access.", { status: 403 });
         }
 
-        // Deduct credit
         if (!user.isPremium) {
             user.credits -= 1;
             await user.save();
         }
+        */
 
         let systemPrompt = "You are an expert resume writer.";
 
@@ -70,30 +97,93 @@ export async function POST(req: Request) {
         } else if (type === 'fix_grammar') {
             finalPrompt = `Fix any grammar and spelling errors in the following text. Do not significantly change the tone or structure.\n\nInput Text:\n${prompt}`;
         } else if (type === 'generate_full') {
-            systemPrompt += " Respond ONLY with valid JSON.";
-            finalPrompt = `Generate a complete professional resume for a ${context?.experienceLevel || "experienced"} ${context?.targetDomain || "Professional"}. 
-            Return a JSON object with the following structure (no markdown formatting):
-            {
-                "personalInfo": { "fullName": "[Name]", "email": "[Email]", "portfolio": "[Role Title]" },
-                "summary": "Professional summary...",
-                "experience": [ { "company": "Company Name", "role": "Role Title", "startDate": "2020", "endDate": "Present", "description": "Key achievement..." } ],
-                "education": [ { "school": "University Name", "degree": "Degree Name", "startDate": "2016", "endDate": "2020" } ],
-                "skills": ["Skill 1", "Skill 2"]
-            }`;
+            // Parse user data - prioritize context.userData if available, otherwise parse from prompt
+            let userData: any = context?.userData || {};
+            
+            if (!userData || Object.keys(userData).length === 0) {
+                try {
+                    userData = JSON.parse(prompt);
+                } catch {
+                    // If not JSON, try to extract from text format
+                    userData = { rawText: prompt };
+                }
+            }
 
-            // For JSON generation, we use generateText instead of streamText to ensure validity
-            const { generateText } = await import('ai');
-            const { text } = await generateText({
-                model: google('gemini-pro'),
+            // Enhanced system prompt với luật NGHIÊM NGẶT cho sinh CV mới từ dữ liệu thô
+            systemPrompt = `You are an expert resume writer. CRITICAL RULES:
+1. You MUST use the EXACT information provided by the user
+2. DO NOT invent, create, or make up any information
+3. Use the EXACT name, email, and phone number from the input
+4. Parse and format the provided experience text - do not add new experiences
+5. Parse and format the provided education text - do not add new education
+6. Use the EXACT skills from the input (split by comma/semicolon if needed)
+7. Only enhance the language and formatting, never change the facts
+8. If information is missing, leave it empty or use placeholder text`;
+
+            // Build detailed prompt with explicit instructions
+            finalPrompt = `Create a professional resume using the EXACT information provided below.
+
+User Information (MUST USE EXACTLY AS PROVIDED):
+${JSON.stringify(userData, null, 2)}
+
+${context?.jobDescription ? `Target Job Description:\n${context.jobDescription}\n\nTailor the resume to match this job description while using the exact user information.` : ''}
+
+Instructions:
+1. personalInfo.fullName: Use the EXACT name from userData.personalInfo.fullName
+2. personalInfo.email: Use the EXACT email from userData.personalInfo.email  
+3. personalInfo.phone: Use the EXACT phone from userData.personalInfo.phone (if provided)
+4. experience: Parse the experience text from userData.experience. Extract company names, roles, dates, and descriptions. Format professionally but keep the original information.
+5. education: Parse the education text from userData.education. Extract school names, degrees, and dates.
+6. skills: Split the skills string from userData.skills (by comma, semicolon, or newline) and format as an array
+7. summary: Create a professional summary based on the provided experience and target job, but use only the information provided`;
+
+            // Use generateObject for structured output
+            const result = await generateObject({
+                model: google('gemini-2.5-flash'),
+                schema: ResumeSchema,
                 system: systemPrompt,
                 prompt: finalPrompt,
             });
 
-            return new Response(text);
+            return result.toJsonResponse();
+        } else if (type === 'upgrade_full') {
+            // UPGRADE: cho phép AI thêm chi tiết còn thiếu, giữ đúng các facts chính
+            let userData: any = context?.userData || {};
+
+            if (!userData || Object.keys(userData).length === 0) {
+                try {
+                    userData = JSON.parse(prompt);
+                } catch {
+                    userData = { rawText: prompt };
+                }
+            }
+
+            systemPrompt = `You are an expert resume writer. Your job is to UPGRADE an existing resume.
+RULES:
+1. Keep core facts consistent (company names, job titles, degrees, dates) whenever they exist.
+2. You MAY add reasonable bullet points, responsibilities and achievements that are realistic for the roles.
+3. Strengthen wording, structure, and clarity; make the resume more concise and impactful.
+4. Fill in obviously missing pieces such as summary, skills list, and descriptions using typical expectations for the role and industry.
+5. Maintain a professional tone and avoid adding obviously false or exaggerated claims.`;
+
+            finalPrompt = `Here is the current resume data in structured JSON format:
+
+${JSON.stringify(userData, null, 2)}
+
+Upgrade this resume while following the RULES. Return ONLY the upgraded resume in JSON that matches the schema (personalInfo, summary, experience[], education[], skills[]). Do not wrap in markdown.`;
+
+            const result = await generateObject({
+                model: google('gemini-2.5-flash'),
+                schema: ResumeSchema,
+                system: systemPrompt,
+                prompt: finalPrompt,
+            });
+
+            return result.toJsonResponse();
         }
 
         const result = await streamText({
-            model: google('gemini-pro'),
+            model: google('gemini-2.5-flash'),
             system: systemPrompt,
             prompt: finalPrompt,
         });

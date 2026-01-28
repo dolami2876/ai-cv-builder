@@ -32,6 +32,14 @@ export default function EditorHeader({ resumeId }: { resumeId: string }) {
     };
 
     const handleDownload = () => {
+        if (typeof window === "undefined") return;
+
+        const container = document.getElementById("resume-preview-container");
+        if (!container) {
+            alert("Không tìm thấy nội dung CV để export. Hãy mở CV trong trình chỉnh sửa trước khi xuất.");
+            return;
+        }
+
         window.print();
     };
 
@@ -81,7 +89,7 @@ export default function EditorHeader({ resumeId }: { resumeId: string }) {
                         <span className="hidden sm:inline">Target JD</span>
                     </button>
 
-                    <AIWriterButton />
+                    <AIWriterButton resumeId={resumeId} />
 
 
 

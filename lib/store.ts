@@ -7,6 +7,7 @@ export interface PersonalInfo {
     phone: string;
     linkedin: string;
     portfolio: string;
+    avatarUrl?: string;
 }
 
 export interface Experience {
@@ -158,7 +159,8 @@ export const useResumeStore = create<ResumeState>((set, get) => ({
         email: "",
         phone: "",
         linkedin: "",
-        portfolio: ""
+        portfolio: "",
+        avatarUrl: ""
     },
     summary: "",
     experience: [],

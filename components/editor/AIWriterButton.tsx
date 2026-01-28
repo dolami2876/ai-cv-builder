@@ -4,44 +4,75 @@ import { useResumeStore } from "@/lib/store";
 import { Sparkles, Loader2 } from "lucide-react";
 import { useState } from "react";
 
-export default function AIWriterButton() {
+export default function AIWriterButton({ resumeId }: { resumeId?: string }) {
     const {
-        targetDomain, experienceLevel,
-        setPersonalInfo, setSummary, setExperience, setEducation, setSkills
+        personalInfo,
+        summary,
+        experience,
+        education,
+        skills,
+        targetDomain,
+        experienceLevel,
+        jobDescription,
+        setPersonalInfo,
+        setSummary,
+        setExperience,
+        setEducation,
+        setSkills,
+        saveResume,
     } = useResumeStore();
     const [isGenerating, setIsGenerating] = useState(false);
     const [tone, setTone] = useState("Professional");
 
     const handleGenerate = async () => {
-        if (!confirm("AI will generate a sample resume based on your goal. This will overwrite existing content. Continue?")) return;
+        if (!confirm("AI sẽ NÂNG CẤP CV hiện tại của bạn: đánh giá, cải thiện câu chữ và bổ sung các ý còn thiếu (nhưng vẫn dựa trên thông tin bạn đã có). Tiếp tục?")) return;
 
         setIsGenerating(true);
         try {
+            // Đóng gói toàn bộ CV hiện tại gửi cho AI để nâng cấp
+            const currentData = {
+                personalInfo,
+                summary,
+                experience,
+                education,
+                skills,
+                targetDomain,
+                experienceLevel,
+                jobDescription,
+            };
+
             const res = await fetch("/api/generate", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    type: "generate_full",
-                    context: { targetDomain, experienceLevel },
-                    tone
+                    type: "upgrade_full",
+                    prompt: JSON.stringify(currentData),
+                    context: {
+                        targetDomain,
+                        experienceLevel,
+                        jobDescription,
+                        userData: currentData,
+                    },
+                    tone,
                 }),
             });
 
-            if (!res.ok) throw new Error("Generation failed");
+            if (!res.ok) {
+                const msg = await res.text();
+                throw new Error(msg || "Generation failed");
+            }
 
             const text = await res.text();
-            const jsonStr = text.replace(/```json|```/g, "").trim();
-            const data = JSON.parse(jsonStr);
+            const data = JSON.parse(text);
 
             // Populate Store
             if (data.personalInfo) {
-                // Keep existing name/email if they exist, only overwrite if empty or specific logic needed
-                // For "Auto-fill", we assume user wants the role title from AI
                 setPersonalInfo({
-                    // Only fill portfolio (Title) from AI, keep user contact info if present?
-                    // Let's assume user wants full fill.
-                    fullName: data.personalInfo.fullName || "Your Name",
-                    portfolio: data.personalInfo.portfolio || "",
+                    fullName: data.personalInfo.fullName || personalInfo.fullName,
+                    email: data.personalInfo.email || personalInfo.email,
+                    phone: data.personalInfo.phone || personalInfo.phone,
+                    linkedin: personalInfo.linkedin,
+                    portfolio: personalInfo.portfolio,
                 });
             }
 
@@ -59,9 +90,13 @@ export default function AIWriterButton() {
                 setSkills(data.skills);
             }
 
+            // Tự động lưu lại sau khi nâng cấp nếu có resumeId
+            if (resumeId) {
+                await saveResume(resumeId);
+            }
         } catch (error) {
             console.error(error);
-            alert("Failed to generate resume. Please try again.");
+            alert("Nâng cấp CV thất bại. Vui lòng thử lại.");
         } finally {
             setIsGenerating(false);
         }
@@ -95,7 +130,7 @@ export default function AIWriterButton() {
                 ) : (
                     <Sparkles className="h-4 w-4 text-purple-500" />
                 )}
-                <span className="hidden sm:inline">AI Auto-Fill</span>
+                <span className="hidden sm:inline">Nâng cấp CV</span>
             </button>
         </div>
     );

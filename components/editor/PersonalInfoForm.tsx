@@ -1,13 +1,43 @@
 "use client";
 
 import { useResumeStore } from "@/lib/store";
+import { useState } from "react";
 
 export default function PersonalInfoForm() {
     const { personalInfo, setPersonalInfo } = useResumeStore();
+    const [uploading, setUploading] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setPersonalInfo({ [name]: value });
+    };
+
+    const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const res = await fetch("/api/upload-avatar", {
+                method: "POST",
+                body: formData,
+            });
+
+            if (!res.ok) {
+                throw new Error("Upload failed");
+            }
+
+            const data = await res.json();
+            setPersonalInfo({ avatarUrl: data.url });
+        } catch (error) {
+            console.error(error);
+            alert("Upload ảnh thất bại. Vui lòng thử lại.");
+        } finally {
+            setUploading(false);
+        }
     };
 
     return (
@@ -18,6 +48,27 @@ export default function PersonalInfoForm() {
             </div>
 
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-gray-700">Ảnh cá nhân</label>
+                    <div className="flex items-center gap-4">
+                        {personalInfo.avatarUrl && (
+                            <img
+                                src={personalInfo.avatarUrl}
+                                alt="Avatar"
+                                className="h-12 w-12 rounded-full object-cover border"
+                            />
+                        )}
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleAvatarChange}
+                            className="text-sm"
+                        />
+                    </div>
+                    {uploading && (
+                        <p className="text-xs text-gray-500">Đang tải ảnh lên...</p>
+                    )}
+                </div>
                 <div className="space-y-1.5">
                     <label className="text-sm font-medium text-gray-700">Full Name</label>
                     <input

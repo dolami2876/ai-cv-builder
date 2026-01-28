@@ -13,6 +13,7 @@ export interface IResume extends Document {
         phone: string;
         linkedin?: string;  // Dấu ? nghĩa là không bắt buộc
         portfolio?: string;
+        avatarUrl?: string;
     };
     summary: string;
     experience: {
@@ -92,6 +93,7 @@ const ResumeSchema = new Schema<IResume>(
             phone: { type: String, default: "" },
             linkedin: { type: String, default: "" },
             portfolio: { type: String, default: "" },
+            avatarUrl: { type: String, default: "" },
         },
         summary: { type: String, default: "" },
 

@@ -6,10 +6,32 @@ export const maxDuration = 60;
 
 export async function POST(req: Request) {
     try {
-        const { resumeData } = await req.json();
+        const { resumeData, jobDescription } = await req.json();
+
+        let systemPrompt = `You are an expert ATS (Applicant Tracking System) and professional resume reviewer. 
+Analyze the provided resume data. 
+Critique it based on: 
+1. Clarity and Conciseness
+2. Impact (usage of action verbs, metrics)
+3. ATS Friendliness (standard section names, keywords)
+4. Completeness`;
+
+        let userPrompt = `Resume Data: ${JSON.stringify(resumeData)}`;
+
+        // If job description is provided, add JD matching analysis
+        if (jobDescription) {
+            systemPrompt += `
+5. Job Description Match (how well the resume aligns with the job requirements)
+6. Keyword Optimization (presence of relevant keywords from JD)
+7. Skills Alignment (matching required vs. listed skills)`;
+            
+            userPrompt += `\n\nJob Description:\n${jobDescription}\n\nPlease evaluate how well this resume matches the job description and provide specific recommendations for improvement.`;
+        }
+
+        systemPrompt += `\n\nBe strict but constructive. Provide actionable feedback in Vietnamese.`;
 
         const result = await generateObject({
-            model: google('gemini-pro'),
+            model: google('gemini-2.5-flash'),
             schema: z.object({
                 score: z.number().describe('Overall score from 0 to 100'),
                 summary: z.string().describe('Brief summary of the evaluation'),
@@ -20,16 +42,8 @@ export async function POST(req: Request) {
                     issues: z.array(z.string()).describe('Specific ATS issues found')
                 })
             }),
-            system: `You are an expert ATS (Applicant Tracking System) and professional resume reviewer. 
-      Analyze the provided resume data JSON. 
-      Critique it based on: 
-      1. Clarity and Conciseness
-      2. Impact (usage of action verbs, metrics)
-      3. ATS Friendliness (standard section names, keywords)
-      4. Completeness
-      
-      Be strict but constructive.`,
-            prompt: `Resume Data: ${JSON.stringify(resumeData)}`,
+            system: systemPrompt,
+            prompt: userPrompt,
         });
 
         return result.toJsonResponse();

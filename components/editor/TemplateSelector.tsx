@@ -70,7 +70,7 @@ export default function TemplateSelector() {
                         <label className="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             <Layout className="h-3 w-3" /> Layout
                         </label>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-3 gap-2">
                             <button
                                 onClick={() => setStyle({ layout: "modern" })}
                                 className={`rounded-md border p-2 text-center text-xs transition-colors ${style.layout === "modern" ? 'border-purple-600 bg-purple-50 text-purple-700' : 'border-gray-200 hover:bg-gray-50'}`}
@@ -82,6 +82,12 @@ export default function TemplateSelector() {
                                 className={`rounded-md border p-2 text-center text-xs transition-colors ${style.layout === "classic" ? 'border-purple-600 bg-purple-50 text-purple-700' : 'border-gray-200 hover:bg-gray-50'}`}
                             >
                                 Classic
+                            </button>
+                            <button
+                                onClick={() => setStyle({ layout: "sidebar" })}
+                                className={`rounded-md border p-2 text-center text-xs transition-colors ${style.layout === "sidebar" ? 'border-purple-600 bg-purple-50 text-purple-700' : 'border-gray-200 hover:bg-gray-50'}`}
+                            >
+                                Sidebar
                             </button>
                         </div>
                     </div>

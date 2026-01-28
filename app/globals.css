@@ -44,25 +44,28 @@
     background: white;
   }
 
-  /* Hide everything */
-  body>* {
-    display: none !important;
+  /* Ẩn mọi thứ mặc định */
+  body * {
+    visibility: hidden;
   }
 
-  /* Show only the resume preview */
+  /* Chỉ hiển thị khu vực preview CV khi in */
+  #resume-preview-container,
+  #resume-preview-container * {
+    visibility: visible;
+  }
+
   #resume-preview-container {
-    display: block !important;
     position: absolute;
     top: 0;
     left: 0;
     width: 210mm;
-    height: 100%;
     margin: 0;
     padding: 0;
     overflow: visible;
   }
 
-  /* Ensure background graphics are printed */
+  /* In cả màu nền, viền */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;

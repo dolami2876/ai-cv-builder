@@ -4,6 +4,7 @@ const isProtectedRoute = createRouteMatcher([
     '/dashboard(.*)',
     '/editor(.*)',
     '/onboarding(.*)',
+    '/admin(.*)',
 ]);
 
 const isPublicRoute = createRouteMatcher([

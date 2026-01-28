@@ -1,0 +1,5 @@
+# Dependencies for PDF OCR script (EasyOCR)
+# Install: pip install -r scripts/requirements-ocr.txt
+pymupdf>=1.23.0
+easyocr>=1.7.0
+numpy>=1.24.0
