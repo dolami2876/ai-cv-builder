@@ -86,6 +86,13 @@ export default function Home() {
             color="yellow"
           />
           <ToolCard
+            title="Việc làm gợi ý"
+            description="AI sàng lọc việc làm phù hợp với CV của bạn từ nhiều nguồn, chấm điểm và giải thích"
+            icon={<Briefcase className="h-8 w-8 text-emerald-600" />}
+            href="/jobs/recommended"
+            color="green"
+          />
+          <ToolCard
             title="CV Của Tôi"
             description="Xem tất cả CV của bạn và quản lý chúng từ một nơi"
             icon={<Briefcase className="h-8 w-8 text-indigo-600" />}

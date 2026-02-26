@@ -5,6 +5,7 @@ const isProtectedRoute = createRouteMatcher([
     '/editor(.*)',
     '/onboarding(.*)',
     '/admin(.*)',
+    '/jobs(.*)',
 ]);
 
 const isPublicRoute = createRouteMatcher([
