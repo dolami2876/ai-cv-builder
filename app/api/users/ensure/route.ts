@@ -24,7 +24,6 @@ export async function POST() {
       {
         $setOnInsert: {
           clerkId: userId,
-          email: primaryEmail,
           credits: 50,
           lastFreeCreditReset: new Date(),
           isPremium: false,

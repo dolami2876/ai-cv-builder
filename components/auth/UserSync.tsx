@@ -9,22 +9,31 @@ export default function UserSync() {
   useEffect(() => {
     if (!isLoaded || !isSignedIn || !user?.id) return;
 
-    const key = `user-synced:${user.id}`;
-    const alreadySynced = sessionStorage.getItem(key);
-    if (alreadySynced) return;
+    const key = `user-sync-status:${user.id}`;
 
     const sync = async () => {
       try {
+        sessionStorage.setItem(key, "syncing");
+
         const res = await fetch("/api/users/ensure", { method: "POST" });
-        if (res.ok) {
-          sessionStorage.setItem(key, "1");
+        if (!res.ok) {
+          const text = await res.text();
+          console.error("Failed to sync user", res.status, text);
+          sessionStorage.removeItem(key);
+          return;
         }
+
+        sessionStorage.setItem(key, "synced");
       } catch (error) {
         console.error("Failed to sync user", error);
+        sessionStorage.removeItem(key);
       }
     };
 
-    sync();
+    const status = sessionStorage.getItem(key);
+    if (status !== "synced") {
+      sync();
+    }
   }, [isLoaded, isSignedIn, user?.id]);
 
   return null;
