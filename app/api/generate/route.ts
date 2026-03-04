@@ -3,7 +3,7 @@ import { streamText, generateObject } from 'ai';
 import { z } from 'zod';
 import { auth } from "@clerk/nextjs/server";
 import connectToDB from "@/lib/db";
-import User from "@/models/User";
+import { ensureUserByClerkId } from "@/lib/users/ensure-user";
 
 // Shared schema cho các response dạng CV đầy đủ
 const ResumeSchema = z.object({
@@ -48,10 +48,7 @@ export async function POST(req: Request) {
 
         await connectToDB();
 
-        let user = await User.findOne({ clerkId: userId });
-        if (!user) {
-            return new Response("User not found", { status: 404 });
-        }
+        const user = await ensureUserByClerkId(userId);
 
         const today = new Date();
         const lastReset = user.lastFreeCreditReset ? new Date(user.lastFreeCreditReset) : new Date(0);
