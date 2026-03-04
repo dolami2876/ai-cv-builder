@@ -60,7 +60,8 @@ export default function PricingPlans({ userId }: { userId: string | null }) {
   } | null>(null);
   const [currentCredits, setCurrentCredits] = useState<number | null>(null);
   const [currentPlan, setCurrentPlan] = useState<string | null>(null);
-  const initialPaymentRef = useRef<string | null>(null);
+  const [selectedAt, setSelectedAt] = useState<number | null>(null);
+  const seenSuccessTransactionRef = useRef<string | null>(null);
 
   const qrUrl = useMemo(() => {
     if (!selectedPlan) return null;
@@ -102,13 +103,17 @@ export default function PricingPlans({ userId }: { userId: string | null }) {
           return;
         }
 
-        if (!initialPaymentRef.current) {
-          initialPaymentRef.current = latest.transactionId;
-          return;
-        }
+        const paidPlan = latest.status.replace("success:", "").toUpperCase();
+        const latestPaidAt = latest.date ? new Date(latest.date).getTime() : 0;
+        const selectedPlanUpper = selectedPlan.toUpperCase();
+        const wasTriggeredAfterSelection = selectedAt ? latestPaidAt >= selectedAt - 60_000 : true;
 
-        if (latest.transactionId !== initialPaymentRef.current) {
-          const paidPlan = latest.status.replace("success:", "");
+        if (
+          paidPlan === selectedPlanUpper &&
+          wasTriggeredAfterSelection &&
+          seenSuccessTransactionRef.current !== latest.transactionId
+        ) {
+          seenSuccessTransactionRef.current = latest.transactionId;
           setPaymentSuccess({
             plan: paidPlan,
             credits: json.data.credits,
@@ -136,7 +141,7 @@ export default function PricingPlans({ userId }: { userId: string | null }) {
       isUnmounted = true;
       if (intervalId) clearInterval(intervalId);
     };
-  }, [userId, selectedPlan]);
+  }, [userId, selectedPlan, selectedAt]);
 
   return (
     <>
@@ -189,8 +194,9 @@ export default function PricingPlans({ userId }: { userId: string | null }) {
               <button
                 onClick={() => {
                   setSelectedPlan(plan.code);
+                  setSelectedAt(Date.now());
                   setPaymentSuccess(null);
-                  initialPaymentRef.current = null;
+                  seenSuccessTransactionRef.current = null;
                 }}
                 className={`mt-6 w-full rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
                   isSelected
