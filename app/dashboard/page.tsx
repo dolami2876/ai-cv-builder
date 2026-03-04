@@ -25,9 +25,19 @@ export default function DashboardPage() {
         if (isLoaded && !isSignedIn) {
             router.push("/");
         } else if (isLoaded && isSignedIn) {
-            fetchResumes();
+            ensureUserAndFetchResumes();
         }
     }, [isLoaded, isSignedIn, router]);
+
+    const ensureUserAndFetchResumes = async () => {
+        try {
+            await fetch("/api/users/ensure", { method: "POST" });
+        } catch (error) {
+            console.error("Failed to ensure user", error);
+        }
+
+        await fetchResumes();
+    };
 
     const fetchResumes = async () => {
         try {

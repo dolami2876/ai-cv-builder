@@ -27,12 +27,12 @@ export async function POST(req: NextRequest) {
                 || '';
 
             // Use findOneAndUpdate with upsert to handle duplicate key errors
-            const user = await User.findOneAndUpdate(
+            await User.findOneAndUpdate(
                 { clerkId: id },
                 {
                     clerkId: id,
                     email: primaryEmail,
-                    credits: 5, // Free 5 credits
+                    credits: 50, // Free 50 credits
                     lastFreeCreditReset: new Date(),
                     isPremium: false,
                     paymentHistory: [],

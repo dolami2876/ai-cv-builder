@@ -1,7 +1,7 @@
 import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, Sparkles, Briefcase, FileText, Layout, Star, Brain } from "lucide-react";
+import { ArrowRight, Sparkles, Briefcase, FileText, Layout, Star, Brain } from "lucide-react";
 import connectDB from "@/lib/db";
 import User from "@/models/User";
 
@@ -29,7 +29,6 @@ export default async function Home() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
-      {/* Navbar (Simple) */}
       <nav className="flex items-center justify-between border-b px-6 py-4 md:px-12">
         <Link href="/" className="flex items-center gap-2 font-bold text-xl">
           <Sparkles className="h-5 w-5 text-purple-600" />
@@ -39,16 +38,11 @@ export default async function Home() {
         <div className="flex items-center gap-4">
           <SignedOut>
             <SignInButton mode="modal">
-              <button className="text-sm font-medium text-gray-600 hover:text-gray-900">
-                Sign In
-              </button>
+              <button className="text-sm font-medium text-gray-600 hover:text-gray-900">Sign In</button>
             </SignInButton>
           </SignedOut>
           <SignedIn>
-            <Link
-              href="/dashboard"
-              className="text-sm font-medium text-gray-600 hover:text-gray-900"
-            >
+            <Link href="/dashboard" className="text-sm font-medium text-gray-600 hover:text-gray-900">
               Dashboard
             </Link>
 
@@ -72,7 +66,6 @@ export default async function Home() {
         </div>
       </nav>
 
-      {/* Hero Section */}
       <main className="flex flex-1 flex-col items-center justify-center px-6 py-20 text-center md:px-12 lg:py-32">
         <div className="mx-auto max-w-3xl space-y-6">
           <div className="mx-auto w-fit rounded-full bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700 ring-1 ring-purple-100">
@@ -84,11 +77,11 @@ export default async function Home() {
           </h1>
 
           <p className="mx-auto max-w-2xl text-lg text-gray-500 md:text-xl">
-            Create a standout CV in minutes. Our AI-powered tools help you discover your career path, generate professional content, and optimize your resume for your dream job.
+            Create a standout CV in minutes. Our AI-powered tools help you discover your career path, generate professional
+            content, and optimize your resume for your dream job.
           </p>
         </div>
 
-        {/* Tools Grid */}
         <div id="tools" className="mt-24 grid w-full max-w-6xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <ToolCard
             title="AI Gợi ý Ngành Nghề"
@@ -133,44 +126,23 @@ export default async function Home() {
             color="indigo"
           />
         </div>
-
-        {/* Features Preview */}
-        <div id="features" className="mt-24 grid w-full max-w-5xl gap-8 sm:grid-cols-3 text-left">
-          <FeatureCard
-            title="AI Writing Assistant"
-            description="Stuck on what to write? Let CV Boost generate professional summaries and work experience points instantly."
-            icon={<Sparkles className="h-6 w-6 text-purple-600" />}
-          />
-          <FeatureCard
-            title="Real-time Preview"
-            description="See your changes instantly with our split-screen editor. No more guessing how it looks."
-            icon={<CheckCircle2 className="h-6 w-6 text-green-600" />}
-          />
-          <FeatureCard
-            title="ATS Friendly"
-            description="Clean, professional templates designed to pass Applicant Tracking Systems and get you hired."
-            icon={<CheckCircle2 className="h-6 w-6 text-blue-600" />}
-          />
-        </div>
       </main>
 
-      <footer className="border-t py-8 text-center text-sm text-gray-500">
-        © {new Date().getFullYear()} CV Boost. All rights reserved.
-      </footer>
+      <footer className="border-t py-8 text-center text-sm text-gray-500">© {new Date().getFullYear()} CV Boost. All rights reserved.</footer>
     </div>
   );
 }
 
-function ToolCard({ 
-  title, 
-  description, 
-  icon, 
-  href, 
-  color 
-}: { 
-  title: string; 
-  description: string; 
-  icon: React.ReactNode; 
+function ToolCard({
+  title,
+  description,
+  icon,
+  href,
+  color,
+}: {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
   href: string;
   color: string;
 }) {
@@ -198,16 +170,4 @@ function ToolCard({
       </div>
     </Link>
   );
-}
-
-function FeatureCard({ title, description, icon }: { title: string; description: string; icon: React.ReactNode }) {
-  return (
-    <div className="rounded-xl border bg-gray-50 p-6 transition hover:shadow-md">
-      <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-white shadow-sm border">
-        {icon}
-      </div>
-      <h3 className="mb-2 text-lg font-bold text-gray-900">{title}</h3>
-      <p className="text-gray-600">{description}</p>
-    </div>
-  )
 }
