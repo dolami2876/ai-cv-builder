@@ -18,7 +18,6 @@ export async function ensureUserByClerkId(userId: string): Promise<IUser> {
     {
       $setOnInsert: {
         clerkId: userId,
-        email: primaryEmail,
         credits: 50,
         lastFreeCreditReset: new Date(),
         isPremium: false,
