@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     const lastReset = user.lastFreeCreditReset ? new Date(user.lastFreeCreditReset) : new Date(0);
 
     if (today.toDateString() !== lastReset.toDateString()) {
-      user.credits = 5;
+      user.credits = 50;
       user.lastFreeCreditReset = today;
       await user.save();
     }

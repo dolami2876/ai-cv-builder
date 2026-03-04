@@ -1,10 +1,10 @@
 import { currentUser } from "@clerk/nextjs/server";
-import User from "@/models/User";
+import User, { IUser } from "@/models/User";
 
-export async function ensureUserByClerkId(userId: string) {
-  let user = await User.findOne({ clerkId: userId });
-  if (user) {
-    return user;
+export async function ensureUserByClerkId(userId: string): Promise<IUser> {
+  const existingUser = await User.findOne({ clerkId: userId });
+  if (existingUser) {
+    return existingUser;
   }
 
   const clerkUser = await currentUser();
@@ -13,7 +13,7 @@ export async function ensureUserByClerkId(userId: string) {
     clerkUser?.emailAddresses?.[0]?.emailAddress ||
     `${userId}@no-email.local`;
 
-  user = await User.findOneAndUpdate(
+  const createdOrUpdatedUser = await User.findOneAndUpdate(
     { clerkId: userId },
     {
       $setOnInsert: {
@@ -31,5 +31,9 @@ export async function ensureUserByClerkId(userId: string) {
     { upsert: true, new: true }
   );
 
-  return user;
+  if (!createdOrUpdatedUser) {
+    throw new Error("Failed to ensure user record");
+  }
+
+  return createdOrUpdatedUser;
 }
