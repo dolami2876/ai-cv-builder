@@ -37,7 +37,9 @@ export default function PricingModal({ isOpen, onClose, clerkId }: PricingModalP
                     {PLAN_ORDER.map((code) => {
                         const plan = PLAN_CONFIGS[code];
                         const description = clerkId ? buildPaymentContent(plan.code, clerkId) : "Đăng nhập để tạo mã thanh toán";
-                        const qrUrl = `https://qr.sepay.vn/img?bank=MBBank&acc=0000000000&template=compact&amount=${plan.amountVnd}&des=${encodeURIComponent(description)}`;
+                        const bankCode = process.env.NEXT_PUBLIC_SEPAY_BANK_CODE || "MBBank";
+                        const bankAccount = process.env.NEXT_PUBLIC_SEPAY_BANK_ACCOUNT || "";
+                        const qrUrl = `https://qr.sepay.vn/img?bank=${bankCode}&acc=${bankAccount}&template=compact&amount=${plan.amountVnd}&des=${encodeURIComponent(description)}`;
 
                         return (
                             <div

@@ -31,8 +31,8 @@ function formatVnd(amount: number) {
   return new Intl.NumberFormat("vi-VN").format(amount);
 }
 
-const BANK_CODE = "MBBank";
-const BANK_ACCOUNT = "0000000000";
+const BANK_CODE = process.env.NEXT_PUBLIC_SEPAY_BANK_CODE || "MBBank";
+const BANK_ACCOUNT = process.env.NEXT_PUBLIC_SEPAY_BANK_ACCOUNT || "";
 
 export default function PricingPlans({ userId }: { userId: string | null }) {
   const [selectedPlan, setSelectedPlan] = useState<PlanCode | null>(null);
