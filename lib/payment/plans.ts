@@ -34,24 +34,45 @@ export function buildPaymentContent(plan: PlanCode, clerkId: string) {
   return `${PAYMENT_CONTENT_PREFIX}_${plan}_${clerkId}`;
 }
 
+function normalizeClerkId(raw: string): string {
+  const value = raw.trim();
+
+  // Keep original when already in standard Clerk format: user_xxx
+  if (/^user_[a-zA-Z0-9_]+$/i.test(value)) {
+    return value;
+  }
+
+  // Some banks may strip separators: userabc123 -> user_abc123
+  if (/^user[a-zA-Z0-9_]+$/i.test(value)) {
+    return `user_${value.slice(4)}`;
+  }
+
+  return value;
+}
+
 export function parsePlanFromPaymentContent(content: string): { plan: PlanCode; clerkId: string } | null {
   if (!content) return null;
 
   const normalized = content.trim();
-  const directMatch = normalized.match(/^CVPLAN_(FREE|STARTER|PROFESSIONAL)_(user_[a-zA-Z0-9_]+)$/);
+
+  // Standard format: CVPLAN_STARTER_user_xxx
+  const directMatch = normalized.match(/^CVPLAN_(FREE|STARTER|PROFESSIONAL)_(user_?[a-zA-Z0-9_]+)$/i);
   if (directMatch) {
     return {
-      plan: directMatch[1] as PlanCode,
-      clerkId: directMatch[2],
+      plan: directMatch[1].toUpperCase() as PlanCode,
+      clerkId: normalizeClerkId(directMatch[2]),
     };
   }
 
-  // Fallback for content with spaces or additional text
-  const fallbackMatch = normalized.match(/CVPLAN\s*(FREE|STARTER|PROFESSIONAL)\s*(user_[a-zA-Z0-9_]+)/i);
-  if (fallbackMatch) {
+  // Flexible format for bank-normalized content:
+  // - CVPLANSTARTERuserxxx
+  // - CVPLAN STARTER user_xxx
+  // - BankAPINotify CVPLANSTARTERuserxxx
+  const flexibleMatch = normalized.match(/CVPLAN[_\s-]*(FREE|STARTER|PROFESSIONAL)[_\s-]*(user_?[a-zA-Z0-9_]+)/i);
+  if (flexibleMatch) {
     return {
-      plan: fallbackMatch[1].toUpperCase() as PlanCode,
-      clerkId: fallbackMatch[2],
+      plan: flexibleMatch[1].toUpperCase() as PlanCode,
+      clerkId: normalizeClerkId(flexibleMatch[2]),
     };
   }
 
