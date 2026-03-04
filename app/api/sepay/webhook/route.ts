@@ -3,34 +3,44 @@ import connectDB from "@/lib/db";
 import User from "@/models/User";
 import { getPlanByAmount, parsePlanFromPaymentContent } from "@/lib/payment/plans";
 
-function isAuthorized(req: NextRequest) {
-  const expectedSecret = process.env.SEPAY_WEBHOOK_SECRET;
-  if (!expectedSecret) return true;
+function extractApiKeyFromAuthorization(authHeader: string | null) {
+  if (!authHeader) return "";
+  const value = authHeader.trim();
 
-  const tokenHeader = req.headers.get("x-sepay-token");
-  const apiKeyHeader = req.headers.get("x-api-key");
-  const authHeader = req.headers.get("authorization");
+  // SePay sends: Authorization: Apikey <API_KEY>
+  if (/^apikey\s+/i.test(value)) {
+    return value.replace(/^apikey\s+/i, "").trim();
+  }
 
-  const bearerToken = authHeader?.startsWith("Bearer ")
-    ? authHeader.slice("Bearer ".length)
-    : authHeader;
+  // Backward compatibility (if needed)
+  if (/^bearer\s+/i.test(value)) {
+    return value.replace(/^bearer\s+/i, "").trim();
+  }
 
-  const incomingToken = tokenHeader || apiKeyHeader || bearerToken;
-  return incomingToken === expectedSecret;
+  return value;
 }
 
 export async function POST(req: NextRequest) {
   try {
-    if (!isAuthorized(req)) {
-      return NextResponse.json({ success: false, message: "Unauthorized webhook" }, { status: 401 });
+    const expectedSecret = process.env.SEPAY_WEBHOOK_SECRET || "";
+
+    if (expectedSecret) {
+      const authHeader = req.headers.get("authorization");
+      const apiKeyFromAuth = extractApiKeyFromAuthorization(authHeader);
+      const apiKeyDirect = req.headers.get("x-api-key") || req.headers.get("x-sepay-token") || "";
+      const providedSecret = apiKeyFromAuth || apiKeyDirect;
+
+      if (!providedSecret || providedSecret !== expectedSecret) {
+        return NextResponse.json({ success: false, message: "Unauthorized webhook" }, { status: 401 });
+      }
     }
 
     const body = await req.json();
     const { content, transferAmount, referenceCode, id, transactionDate } = body;
 
-    const parsed = parsePlanFromPaymentContent(String(content || ""));
+    const parsed = parsePlanFromPaymentContent(content);
     if (!parsed) {
-      return NextResponse.json({ success: false, message: "Invalid transfer content" }, { status: 400 });
+      return NextResponse.json({ success: false, message: "Invalid content" }, { status: 400 });
     }
 
     const plan = getPlanByAmount(Number(transferAmount));
@@ -49,13 +59,13 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    // Idempotency: if transaction already recorded then skip crediting again
-    const existed = await User.findOne({
+    // Idempotency: do not grant credits twice for same transaction
+    const existing = await User.findOne({
       clerkId: parsed.clerkId,
       "paymentHistory.transactionId": transactionId,
     }).lean();
 
-    if (existed) {
+    if (existing) {
       return NextResponse.json({ success: true, duplicated: true, message: "Transaction already processed" });
     }
 
@@ -79,14 +89,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, plan, user });
   } catch (error) {
     console.error("Sepay Webhook Error:", error);
-    return NextResponse.json({ success: false, message: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
 
 export async function GET() {
-  return NextResponse.json({
-    ok: true,
-    endpoint: "/api/sepay/webhook",
-    message: "SePay webhook is ready",
-  });
+  return NextResponse.json({ success: true, message: "SePay webhook is running" });
 }
