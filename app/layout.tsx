@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
+import UserSync from "@/components/auth/UserSync";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,7 +20,10 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
-        <body className={`${inter.className} bg-gray-50 text-gray-900 antialiased`}>{children}</body>
+        <body className={`${inter.className} bg-gray-50 text-gray-900 antialiased`}>
+          <UserSync />
+          {children}
+        </body>
       </html>
     </ClerkProvider>
   );
