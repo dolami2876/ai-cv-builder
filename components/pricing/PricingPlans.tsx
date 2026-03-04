@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Check } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Check, CircleCheckBig, Loader2 } from "lucide-react";
 import { PLAN_CONFIGS, PlanCode, buildPaymentContent } from "@/lib/payment/plans";
 
 const PLAN_ORDER: PlanCode[] = ["FREE", "STARTER", "PROFESSIONAL"];
@@ -27,6 +27,22 @@ const PLAN_FEATURES: Record<PlanCode, string[]> = {
   ],
 };
 
+interface PaymentStatusResponse {
+  success: boolean;
+  data?: {
+    clerkId: string;
+    credits: number;
+    isPremium: boolean;
+    currentPlan: string;
+    latestPayment: {
+      transactionId: string;
+      amount: number;
+      date: string;
+      status: string;
+    } | null;
+  };
+}
+
 function formatVnd(amount: number) {
   return new Intl.NumberFormat("vi-VN").format(amount);
 }
@@ -36,6 +52,15 @@ const BANK_ACCOUNT = process.env.NEXT_PUBLIC_SEPAY_BANK_ACCOUNT || "";
 
 export default function PricingPlans({ userId }: { userId: string | null }) {
   const [selectedPlan, setSelectedPlan] = useState<PlanCode | null>(null);
+  const [isCheckingPayment, setIsCheckingPayment] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState<{
+    plan: string;
+    credits: number;
+    transactionId: string;
+  } | null>(null);
+  const [currentCredits, setCurrentCredits] = useState<number | null>(null);
+  const [currentPlan, setCurrentPlan] = useState<string | null>(null);
+  const initialPaymentRef = useRef<string | null>(null);
 
   const qrUrl = useMemo(() => {
     if (!selectedPlan) return null;
@@ -54,8 +79,75 @@ export default function PricingPlans({ userId }: { userId: string | null }) {
     };
   }, [selectedPlan, userId]);
 
+  useEffect(() => {
+    if (!userId || !selectedPlan || selectedPlan === "FREE") return;
+
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+    let isUnmounted = false;
+
+    const checkPaymentStatus = async () => {
+      try {
+        setIsCheckingPayment(true);
+        const res = await fetch("/api/payment/status", { cache: "no-store" });
+        if (!res.ok) return;
+
+        const json = (await res.json()) as PaymentStatusResponse;
+        if (!json.success || !json.data) return;
+
+        setCurrentCredits(json.data.credits);
+        setCurrentPlan(json.data.currentPlan);
+
+        const latest = json.data.latestPayment;
+        if (!latest?.transactionId || !latest.status?.startsWith("success:")) {
+          return;
+        }
+
+        if (!initialPaymentRef.current) {
+          initialPaymentRef.current = latest.transactionId;
+          return;
+        }
+
+        if (latest.transactionId !== initialPaymentRef.current) {
+          const paidPlan = latest.status.replace("success:", "");
+          setPaymentSuccess({
+            plan: paidPlan,
+            credits: json.data.credits,
+            transactionId: latest.transactionId,
+          });
+
+          if (intervalId) {
+            clearInterval(intervalId);
+            intervalId = null;
+          }
+        }
+      } catch (error) {
+        console.error("Check payment status failed", error);
+      } finally {
+        if (!isUnmounted) {
+          setIsCheckingPayment(false);
+        }
+      }
+    };
+
+    checkPaymentStatus();
+    intervalId = setInterval(checkPaymentStatus, 5000);
+
+    return () => {
+      isUnmounted = true;
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [userId, selectedPlan]);
+
   return (
     <>
+      {(currentPlan || currentCredits !== null) && (
+        <div className="mb-6 rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-700 shadow-sm">
+          <span className="font-semibold">Gói hiện tại:</span> {currentPlan || "FREE"}
+          <span className="mx-2 text-gray-300">|</span>
+          <span className="font-semibold">Credits:</span> {currentCredits ?? 0}
+        </div>
+      )}
+
       <div className="grid gap-6 md:grid-cols-3">
         {PLAN_ORDER.map((planCode) => {
           const plan = PLAN_CONFIGS[planCode];
@@ -95,7 +187,11 @@ export default function PricingPlans({ userId }: { userId: string | null }) {
               </ul>
 
               <button
-                onClick={() => setSelectedPlan(plan.code)}
+                onClick={() => {
+                  setSelectedPlan(plan.code);
+                  setPaymentSuccess(null);
+                  initialPaymentRef.current = null;
+                }}
                 className={`mt-6 w-full rounded-lg px-4 py-2.5 text-sm font-semibold transition ${
                   isSelected
                     ? "bg-purple-600 text-white hover:bg-purple-700"
@@ -132,8 +228,27 @@ export default function PricingPlans({ userId }: { userId: string | null }) {
                   {qrUrl.content}
                 </p>
               </div>
+
+              <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-600">
+                <Loader2 className={`h-4 w-4 ${isCheckingPayment ? "animate-spin" : ""}`} />
+                Đang kiểm tra giao dịch tự động mỗi 5 giây...
+              </div>
             </>
           ) : null}
+        </div>
+      )}
+
+      {paymentSuccess && (
+        <div className="mx-auto mt-6 w-full max-w-xl rounded-xl border border-green-200 bg-green-50 p-4 text-left text-green-800">
+          <div className="flex items-start gap-2">
+            <CircleCheckBig className="mt-0.5 h-5 w-5" />
+            <div>
+              <p className="font-semibold">Thanh toán thành công</p>
+              <p className="text-sm">Gói: {paymentSuccess.plan}</p>
+              <p className="text-sm">Credits hiện tại: {paymentSuccess.credits}</p>
+              <p className="text-xs opacity-80">Mã giao dịch: {paymentSuccess.transactionId}</p>
+            </div>
+          </div>
         </div>
       )}
 
