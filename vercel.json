@@ -1,0 +1,9 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/ingest-jobs",
+      "schedule": "*/30 * * * *"
+    }
+  ]
+}
+

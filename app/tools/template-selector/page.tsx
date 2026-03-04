@@ -1,6 +1,8 @@
 import { Suspense } from 'react';
 import TemplateSelectorClient from './TemplateSelectorClient';
 
+export const dynamic = "force-dynamic";
+
 export default function TemplateSelectorPage() {
     return (
         <Suspense

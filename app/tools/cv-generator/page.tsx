@@ -1,6 +1,8 @@
 import { Suspense } from 'react';
 import CVGeneratorClient from './CVGeneratorClient';
 
+export const dynamic = "force-dynamic";
+
 export default function CVGeneratorPage() {
     return (
         <Suspense

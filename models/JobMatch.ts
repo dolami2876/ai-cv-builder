@@ -23,7 +23,9 @@ const JobMatchSchema = new Schema<IJobMatch>(
     { timestamps: true }
 );
 
-JobMatchSchema.index({ userId: 1, jobId: 1 }, { unique: true });
+// Mỗi user có thể match cùng 1 job cho nhiều resume khác nhau
+JobMatchSchema.index({ userId: 1, resumeId: 1, jobId: 1 }, { unique: true });
+JobMatchSchema.index({ userId: 1, resumeId: 1, matchedAt: -1 });
 JobMatchSchema.index({ userId: 1, matchedAt: -1 });
 
 const JobMatch: Model<IJobMatch> = mongoose.models.JobMatch || mongoose.model<IJobMatch>("JobMatch", JobMatchSchema);

@@ -16,6 +16,7 @@
     "clsx": "^2.1.1",
     "docx": "^9.5.1",
     "file-saver": "^2.0.5",
+    "fast-xml-parser": "^5.2.5",
     "lucide-react": "^0.563.0",
     "mammoth": "^1.11.0",
     "mongoose": "^9.1.5",

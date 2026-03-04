@@ -20,7 +20,7 @@ export async function scoreJobMatch(
   jobSkills: string[]
 ): Promise<JobScoreResult> {
   const result = await generateObject({
-    model: google("gemini-2.0-flash"),
+    model: google("gemini-2.5-flash"),
     schema: ScoreSchema,
     system: `Bạn là chuyên gia tuyển dụng. Chấm điểm mức độ phù hợp giữa CV ứng viên và JD (1-100).
 Tiêu chí: Kỹ năng, Kinh nghiệm, Văn hóa/ngành nghề. Viết explanation ngắn gọn bằng tiếng Việt.`,

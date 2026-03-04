@@ -1,8 +1,32 @@
 import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, Sparkles, Briefcase, FileText, Layout, Star, Brain } from "lucide-react";
+import connectDB from "@/lib/db";
+import User from "@/models/User";
 
-export default function Home() {
+export default async function Home() {
+  const { userId } = await auth();
+
+  let credits = 0;
+  let currentPlan = "FREE";
+
+  if (userId) {
+    await connectDB();
+    const dbUser = await User.findOne({ clerkId: userId }).lean();
+
+    credits = dbUser?.credits ?? 0;
+
+    const latestStatus = dbUser?.paymentHistory?.[dbUser.paymentHistory.length - 1]?.status;
+    if (typeof latestStatus === "string" && latestStatus.startsWith("success:")) {
+      currentPlan = latestStatus.replace("success:", "").toUpperCase();
+    } else if (dbUser?.isPremium) {
+      currentPlan = "PROFESSIONAL";
+    }
+  }
+
+  const isUpgraded = currentPlan !== "FREE";
+
   return (
     <div className="flex min-h-screen flex-col bg-white">
       {/* Navbar (Simple) */}
@@ -27,15 +51,24 @@ export default function Home() {
             >
               Dashboard
             </Link>
+
+            <div className="hidden sm:flex items-center gap-3 rounded-full border border-gray-200 bg-gray-50 px-4 py-1.5 text-xs">
+              <span className="font-medium text-gray-700">Plan: {currentPlan}</span>
+              <span className="text-gray-500">|</span>
+              <span className="font-medium text-gray-700">Credits: {credits}</span>
+            </div>
+
+            {!isUpgraded && (
+              <Link
+                href="/pricing"
+                className="rounded-full bg-purple-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-purple-700"
+              >
+                Upgrade PRO
+              </Link>
+            )}
+
             <UserButton />
           </SignedIn>
-
-          <Link
-            href="/onboarding"
-            className="rounded-full bg-black px-5 py-2 text-sm font-medium text-white transition hover:bg-gray-800"
-          >
-            Get Started
-          </Link>
         </div>
       </nav>
 
@@ -87,9 +120,9 @@ export default function Home() {
           />
           <ToolCard
             title="Việc làm gợi ý"
-            description="AI sàng lọc việc làm phù hợp với CV của bạn từ nhiều nguồn, chấm điểm và giải thích"
+            description="Vào trang Jobs để chọn nhu cầu, hệ thống sẽ tìm việc phù hợp theo CV của bạn"
             icon={<Briefcase className="h-8 w-8 text-emerald-600" />}
-            href="/jobs/recommended"
+            href="/jobs"
             color="green"
           />
           <ToolCard

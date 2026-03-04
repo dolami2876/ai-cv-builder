@@ -70,6 +70,9 @@ export interface IResume extends Document {
         font: string;
         layout: string;
     };
+    // Vector embedding for semantic matching (jobs)
+    embedding?: number[];
+    embeddingUpdatedAt?: Date;
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -164,6 +167,10 @@ const ResumeSchema = new Schema<IResume>(
             font: { type: String, default: "inter" },
             layout: { type: String, default: "modern" }, // modern, classic, minimal
         },
+
+        // Vector embedding (do not return by default to reduce payload)
+        embedding: { type: [Number], select: false },
+        embeddingUpdatedAt: { type: Date, select: false },
     },
     { timestamps: true }
 );

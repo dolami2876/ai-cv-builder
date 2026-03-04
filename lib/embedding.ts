@@ -1,18 +1,21 @@
 /**
- * Tầng 2 - Vector: tạo embedding từ text (Google Gemini embedding API).
- * Dùng cho Job và Resume để so khớp theo nghĩa.
+ * Tầng 2 - Vector: tạo embedding từ text bằng Google Gemini.
+ *
+ * Sử dụng model `text-embedding-004` với endpoint v1:
+ * POST https://generativelanguage.googleapis.com/v1/models/text-embedding-004:embedContent
  */
-const EMBED_API = "https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent";
-
 export async function getEmbedding(text: string): Promise<number[]> {
   const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
   if (!apiKey) {
     throw new Error("GOOGLE_GENERATIVE_AI_API_KEY is not set");
   }
 
-  const truncated = text.slice(0, 8000); // giới hạn độ dài
+  const truncated = text.slice(0, 8000); // giới hạn độ dài để tránh quá quota
 
-  const res = await fetch(`${EMBED_API}?key=${apiKey}`, {
+  const endpoint =
+    "https://generativelanguage.googleapis.com/v1/models/text-embedding-004:embedContent";
+
+  const res = await fetch(`${endpoint}?key=${apiKey}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -24,16 +27,23 @@ export async function getEmbedding(text: string): Promise<number[]> {
     signal: AbortSignal.timeout(10000),
   });
 
+  const bodyText = await res.text();
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Embedding API failed: ${res.status} ${err}`);
+    throw new Error(`Embedding API failed: ${res.status} ${bodyText}`);
   }
 
-  const data = await res.json();
+  let data: any;
+  try {
+    data = JSON.parse(bodyText);
+  } catch {
+    throw new Error(`Embedding API invalid JSON: ${bodyText}`);
+  }
+
   const values = data.embedding?.values;
   if (!Array.isArray(values)) {
-    throw new Error("Invalid embedding response");
+    throw new Error("Embedding API response missing embedding.values");
   }
+
   return values;
 }
 
