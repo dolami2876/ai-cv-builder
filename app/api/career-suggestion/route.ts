@@ -1,69 +1,85 @@
-import { google } from '@ai-sdk/google';
-import { generateObject } from 'ai';
-import { z } from 'zod';
+import { google } from "@ai-sdk/google";
+import { generateObject } from "ai";
+import { z } from "zod";
 import { auth } from "@clerk/nextjs/server";
+import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import User from "@/models/User";
 
 export const maxDuration = 30;
 
 const CareerSuggestionSchema = z.object({
-    suggestedCareers: z.array(z.object({
-        career: z.string().describe('Tên ngành nghề'),
-        jobTitles: z.array(z.string()).describe('Các vị trí công việc phù hợp'),
-        matchScore: z.number().describe('Điểm phù hợp từ 0-100'),
-        reasons: z.array(z.string()).describe('Lý do phù hợp'),
-        keywords: z.array(z.string()).describe('Từ khóa quan trọng cho ngành nghề này'),
-        requiredSkills: z.array(z.string()).describe('Kỹ năng cần thiết'),
-        growthPotential: z.string().describe('Tiềm năng phát triển (High/Medium/Low)'),
-    })).describe('Danh sách ngành nghề được đề xuất'),
-    summary: z.string().describe('Tóm tắt phân tích và đề xuất'),
-    nextSteps: z.array(z.string()).describe('Các bước tiếp theo để phát triển sự nghiệp'),
+  suggestedCareers: z.array(
+    z.object({
+      career: z.string().describe("Tên ngành nghề"),
+      jobTitles: z.array(z.string()).describe("Các vị trí công việc phù hợp"),
+      matchScore: z.number().describe("Điểm phù hợp từ 0-100"),
+      reasons: z.array(z.string()).describe("Lý do phù hợp"),
+      keywords: z.array(z.string()).describe("Từ khóa quan trọng cho ngành nghề này"),
+      requiredSkills: z.array(z.string()).describe("Kỹ năng cần thiết"),
+      growthPotential: z.string().describe("Tiềm năng phát triển (High/Medium/Low)"),
+    })
+  ),
+  summary: z.string().describe("Tóm tắt phân tích và đề xuất"),
+  nextSteps: z.array(z.string()).describe("Các bước tiếp theo để phát triển sự nghiệp"),
 });
 
-export async function POST(req: Request) {
-    try {
-        const { skills, education, interests, goals } = await req.json();
+export async function GET() {
+  return NextResponse.json({
+    success: true,
+    message: "Career suggestion endpoint is running",
+    expectedMethod: "POST",
+  });
+}
 
-        if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
-            return new Response("Missing Google API Key", { status: 500 });
-        }
+export async function POST(req: NextRequest) {
+  try {
+    const { skills, education, interests, goals } = await req.json();
 
-        // Check User Credits
-        const { userId } = await auth();
-        if (!userId) {
-            return new Response("Unauthorized", { status: 401 });
-        }
+    if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+      return NextResponse.json(
+        { success: false, message: "Missing GOOGLE_GENERATIVE_AI_API_KEY" },
+        { status: 500 }
+      );
+    }
 
-        await connectDB();
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+    }
 
-        let user = await User.findOne({ clerkId: userId });
-        if (!user) {
-            return new Response("User not found", { status: 404 });
-        }
+    await connectDB();
 
-        const today = new Date();
-        const lastReset = user.lastFreeCreditReset ? new Date(user.lastFreeCreditReset) : new Date(0);
+    const user = await User.findOne({ clerkId: userId });
+    if (!user) {
+      return NextResponse.json({ success: false, message: "User not found" }, { status: 404 });
+    }
 
-        // Reset credits if it's a new day
-        if (today.toDateString() !== lastReset.toDateString()) {
-            user.credits = 5;
-            user.lastFreeCreditReset = today;
-            await user.save();
-        }
+    const today = new Date();
+    const lastReset = user.lastFreeCreditReset ? new Date(user.lastFreeCreditReset) : new Date(0);
 
-        // Check availability
-        if (user.credits <= 0 && !user.isPremium) {
-            return new Response("Daily free credits exhausted. Upgrade to Premium for unlimited access.", { status: 403 });
-        }
+    if (today.toDateString() !== lastReset.toDateString()) {
+      user.credits = 5;
+      user.lastFreeCreditReset = today;
+      await user.save();
+    }
 
-        // Deduct credit
-        if (!user.isPremium) {
-            user.credits -= 1;
-            await user.save();
-        }
+    if (user.credits <= 0 && !user.isPremium) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Daily free credits exhausted. Upgrade to Premium for unlimited access.",
+        },
+        { status: 403 }
+      );
+    }
 
-        const systemPrompt = `You are an expert career counselor and job market analyst. 
+    if (!user.isPremium) {
+      user.credits -= 1;
+      await user.save();
+    }
+
+    const systemPrompt = `You are an expert career counselor and job market analyst.
 Analyze the user's profile and suggest suitable careers and job positions.
 Consider:
 1. Skills match with industry requirements
@@ -74,25 +90,32 @@ Consider:
 
 Provide detailed, actionable suggestions in Vietnamese.`;
 
-        const userPrompt = `Phân tích hồ sơ cá nhân sau và đề xuất ngành nghề phù hợp:
+    const userPrompt = `Phân tích hồ sơ cá nhân sau và đề xuất ngành nghề phù hợp:
 
-Kỹ năng: ${skills || 'Chưa cung cấp'}
-Học vấn: ${education || 'Chưa cung cấp'}
-Sở thích: ${interests || 'Chưa cung cấp'}
-Mục tiêu: ${goals || 'Chưa cung cấp'}
+Kỹ năng: ${skills || "Chưa cung cấp"}
+Học vấn: ${education || "Chưa cung cấp"}
+Sở thích: ${interests || "Chưa cung cấp"}
+Mục tiêu: ${goals || "Chưa cung cấp"}
 
 Hãy đề xuất 3-5 ngành nghề phù hợp nhất với điểm số phù hợp, lý do, từ khóa quan trọng, kỹ năng cần thiết và tiềm năng phát triển.`;
 
-        const result = await generateObject({
-            model: google('gemini-2.5-flash'),
-            schema: CareerSuggestionSchema,
-            system: systemPrompt,
-            prompt: userPrompt,
-        });
+    const result = await generateObject({
+      model: google("gemini-2.5-flash"),
+      schema: CareerSuggestionSchema,
+      system: systemPrompt,
+      prompt: userPrompt,
+    });
 
-        return result.toJsonResponse();
-    } catch (error) {
-        console.error("Career Suggestion Error:", error);
-        return new Response("Internal Server Error: " + (error as Error).message, { status: 500 });
-    }
+    return NextResponse.json(result.object);
+  } catch (error) {
+    console.error("Career Suggestion Error:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Internal Server Error",
+        detail: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 }
+    );
+  }
 }
